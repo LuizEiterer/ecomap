@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="pt-pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoMap Pro: Mapeamento Colaborativo</title>
+    
+    <!-- Leaflet CSS para o Mapa -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        :root { --primary: #2ecc71; --dark: #1a1a1a; --accent: #3498db; --danger: #e74c3c; }
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--dark); color: white; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        
+        #header { padding: 12px 15px; background: #222; border-bottom: 2px solid var(--primary); display: flex; justify-content: space-between; align-items: center; z-index: 1000; }
+        #status-bar { font-size: 0.75rem; color: #aaa; padding: 6px; text-align: center; background: #000; border-bottom: 1px solid #333; }
+        
+        #map { flex-grow: 1; width: 100%; z-index: 1; }
+
+        #action-panel { padding: 15px; background: #222; border-radius: 20px 20px 0 0; box-shadow: 0 -5px 15px rgba(0,0,0,0.5); z-index: 1001; }
+        .input-group { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 6px; font-size: 0.8rem; color: var(--primary); font-weight: bold; text-transform: uppercase; }
+        
+        select, textarea { width: 100%; box-sizing: border-box; background: #333; border: 1px solid #444; color: white; padding: 12px; border-radius: 10px; font-size: 14px; outline: none; }
+        select:focus, textarea:focus { border-color: var(--primary); }
+        
+        button { padding: 14px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; transition: all 0.2s ease; }
+        .btn-save { background: var(--primary); width: 100%; font-size: 1rem; margin-top: 5px; }
+        .btn-sim { background: var(--accent); font-size: 0.7rem; }
+        .btn-delete { background: var(--danger); padding: 5px 10px; font-size: 0.65rem; margin-top: 10px; width: 100%; }
+        
+        button:active { transform: scale(0.96); opacity: 0.9; }
+        button:disabled { background: #555; cursor: not-allowed; }
+
+        .pulse-indicator {
+            width: 12px; height: 12px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .popup-img { width: 100%; border-radius: 5px; margin-top: 8px; cursor: pointer; max-height: 150px; object-fit: cover; }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(46, 204, 113, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
+        }
+    </style>
+</head>
+<body>
+
+<div id="header">
+    <div style="display: flex; align-items: center; gap: 8px;" onclick="checkAdmin()">
+        <div class="pulse-indicator"></div>
+        <strong style="letter-spacing: 1px; cursor: pointer;">ECO-MAP <span style="color: var(--primary);">CLOUD</span></strong>
+    </div>
+    <div style="display: flex; gap: 5px;">
+        <button class="btn-sim" onclick="toggleSimulacao()" id="sim-btn">Modo Real: OFF</button>
+    </div>
+</div>
+
+<div id="status-bar">
+    ☁️ Nuvem: <span id="cloud-status">A ligar...</span> | 📝 Total: <span id="count">0</span> <span id="admin-tag" style="display:none; color: gold; margin-left: 10px;">(ADMIN)</span>
+</div>
+
+<div id="map"></div>
+
+<div id="action-panel">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;" class="input-group">
+        <div>
+            <label>💧 Estado</label>
+            <select id="status-input">
+                <option value="preservada">Preservada</option>
+                <option value="ameacada">Ameaçada</option>
+                <option value="seca">Seca / Inativa</option>
+            </select>
+        </div>
+        <div>
+            <label>📷 Captura</label>
+            <button id="photo-display-btn" style="background: #333; border: 1px dashed #666; width: 100%; padding: 10px; font-size: 0.7rem; color: white;" onclick="document.getElementById('photo-input').click()">
+                FOTO: NÃO ANEXADA
+            </button>
+            <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none" onchange="previewPhoto(this)">
+        </div>
+    </div>
+
+    <div class="input-group">
+        <label>📝 Descrição da Fonte</label>
+        <textarea id="desc-input" rows="2" placeholder="Descreva a nascente para a comunidade..."></textarea>
+    </div>
+
+    <button class="btn-save" id="save-btn" onclick="salvarPonto()" disabled>A CARREGAR SISTEMA...</button>
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Firebase SDKs -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+    const firebaseConfig = JSON.parse(__firebase_config);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'ecomap-pro-v3';
+
+    let map, userMarker;
+    let currentCoords = [-15.7942, -47.8822]; 
+    let isSimulacao = true;
+    let currentUser = null;
+    let base64Image = null;
+    let isAdmin = false;
+    let clickCount = 0;
+    const marcadoresNoMapa = new Map();
+
+    async function initApp() {
+        setupMap();
+        tentarLocalizacaoAutomatica();
+
+        try {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+                await signInAnonymously(auth);
+            }
+
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    currentUser = user;
+                    document.getElementById('cloud-status').innerText = "Ligado";
+                    document.getElementById('cloud-status').style.color = "#2ecc71";
+                    document.getElementById('save-btn').disabled = false;
+                    document.getElementById('save-btn').innerText = "📍 REGISTRAR NA NUVEM";
+                    ouvirDadosNuvem();
+                }
+            });
+        } catch (error) {
+            console.error("Erro Auth:", error);
+            document.getElementById('cloud-status').innerText = "Erro Ligação";
+        }
+
+        window.salvarPonto = salvarPonto;
+        window.toggleSimulacao = toggleSimulacao;
+        window.deletePonto = deletePonto;
+        window.checkAdmin = () => {
+            clickCount++;
+            if (clickCount >= 5) {
+                const pass = prompt("Introduza a palavra-passe de administrador para moderar:");
+                if (pass === "admin123") { // Altere esta senha conforme desejar
+                    isAdmin = true;
+                    document.getElementById('admin-tag').style.display = 'inline';
+                    alert("Modo Administrador Ativado! Agora pode apagar registos nos popups.");
+                    // Forçar atualização dos markers para mostrar botão delete
+                    marcadoresNoMapa.forEach((marker, id) => {
+                        const data = marker._pontoData;
+                        marker.unbindPopup();
+                        vincularPopup(marker, id, data);
+                    });
+                }
+                clickCount = 0;
+            }
+            setTimeout(() => { clickCount = 0; }, 3000);
+        };
+
+        window.previewPhoto = (input) => {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 600;
+                        const scale = MAX_WIDTH / img.width;
+                        canvas.width = MAX_WIDTH;
+                        canvas.height = img.height * scale;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        base64Image = canvas.toDataURL('image/jpeg', 0.6);
+                        document.getElementById('photo-display-btn').innerText = "📸 FOTO PRONTA";
+                        document.getElementById('photo-display-btn').style.borderColor = "#2ecc71";
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+    }
+
+    function setupMap() {
+        map = L.map('map', { zoomControl: false }).setView(currentCoords, 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+        userMarker = L.circleMarker(currentCoords, { radius: 10, fillColor: "#3498db", color: "#fff", weight: 3, opacity: 1, fillOpacity: 0.9 }).addTo(map);
+        map.on('click', (e) => { if(isSimulacao) { currentCoords = [e.latlng.lat, e.latlng.lng]; userMarker.setLatLng(e.latlng); } });
+    }
+
+    function tentarLocalizacaoAutomatica() {
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition((pos) => {
+                currentCoords = [pos.coords.latitude, pos.coords.longitude];
+                userMarker.setLatLng(currentCoords);
+                map.setView(currentCoords, 16);
+            }, null, { enableHighAccuracy: true });
+        }
+    }
+
+    function ouvirDadosNuvem() {
+        if (!currentUser) return;
+        const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'nascentes');
+        onSnapshot(colRef, (snapshot) => {
+            snapshot.docChanges().forEach((change) => {
+                const data = change.doc.data();
+                const id = change.doc.id;
+                if (change.type === "added" || change.type === "modified") {
+                    if (marcadoresNoMapa.has(id)) map.removeLayer(marcadoresNoMapa.get(id));
+                    adicionarMarcadorMapa(id, data);
+                } else if (change.type === "removed") {
+                    if (marcadoresNoMapa.has(id)) {
+                        map.removeLayer(marcadoresNoMapa.get(id));
+                        marcadoresNoMapa.delete(id);
+                    }
+                }
+            });
+            document.getElementById('count').innerText = snapshot.size;
+        }, (error) => console.error(error));
+    }
+
+    async function salvarPonto() {
+        if (!currentUser) return;
+        const desc = document.getElementById('desc-input').value;
+        const status = document.getElementById('status-input').value;
+        if (!desc.trim()) return alert("Adicione uma descrição.");
+        const btn = document.getElementById('save-btn');
+        btn.disabled = true;
+        btn.innerText = "A ENVIAR...";
+        try {
+            const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'nascentes');
+            await addDoc(colRef, {
+                lat: currentCoords[0], lng: currentCoords[1], status: status,
+                descricao: desc.trim(), foto: base64Image, autor: currentUser.uid, data: new Date().toISOString()
+            });
+            document.getElementById('desc-input').value = "";
+            document.getElementById('photo-input').value = "";
+            document.getElementById('photo-display-btn').innerText = "FOTO: NÃO ANEXADA";
+            base64Image = null;
+            alert("Registado com sucesso!");
+        } catch (error) { alert("Erro ao guardar."); }
+        finally { btn.disabled = false; btn.innerText = "📍 REGISTRAR NA NUVEM"; }
+    }
+
+    async function deletePonto(id) {
+        if (!isAdmin) return;
+        if (confirm("Tem a certeza que deseja apagar este registo permanentemente?")) {
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'nascentes', id);
+                await deleteDoc(docRef);
+                alert("Registo apagado.");
+            } catch (error) { alert("Erro ao apagar registo."); }
+        }
+    }
+
+    function adicionarMarcadorMapa(id, ponto) {
+        let cor = ponto.status === 'preservada' ? '#2ecc71' : (ponto.status === 'ameacada' ? '#f1c40f' : '#e74c3c');
+        const marker = L.circleMarker([ponto.lat, ponto.lng], { radius: 8, fillColor: cor, color: "#000", weight: 1, fillOpacity: 1 }).addTo(map);
+        marker._pontoData = ponto; // Guardar dados para re-renderizar popup se virar admin
+        vincularPopup(marker, id, ponto);
+        marcadoresNoMapa.set(id, marker);
+    }
+
+    function vincularPopup(marker, id, ponto) {
+        let cor = ponto.status === 'preservada' ? '#2ecc71' : (ponto.status === 'ameacada' ? '#f1c40f' : '#e74c3c');
+        let fotoHtml = ponto.foto ? `<img src="${ponto.foto}" class="popup-img" onclick="window.open(this.src)">` : '<p style="color:#888;font-size:10px;">Sem foto anexada</p>';
+        let deleteBtn = isAdmin ? `<button class="btn-delete" onclick="deletePonto('${id}')">APAGAR REGISTO</button>` : '';
+
+        marker.bindPopup(`
+            <div style="color: black; min-width: 160px; font-family: sans-serif;">
+                <b style="text-transform: uppercase; color: ${cor}">Nascente ${ponto.status}</b><br>
+                ${fotoHtml}
+                <p style="margin: 8px 0; font-size: 13px;">${ponto.descricao}</p>
+                <small style="color: #888;">${new Date(ponto.data).toLocaleDateString('pt-PT')}</small>
+                ${deleteBtn}
+            </div>
+        `);
+    }
+
+    function toggleSimulacao() {
+        isSimulacao = !isSimulacao;
+        const btn = document.getElementById('sim-btn');
+        btn.innerText = isSimulacao ? "Modo Real: OFF" : "Modo Real: ON";
+        btn.style.background = isSimulacao ? "#3498db" : "#2ecc71";
+        if (!isSimulacao && "geolocation" in navigator) {
+            navigator.geolocation.watchPosition((pos) => {
+                currentCoords = [pos.coords.latitude, pos.coords.longitude];
+                userMarker.setLatLng(currentCoords);
+                if(!map.getBounds().contains(currentCoords)) map.panTo(currentCoords);
+            }, null, { enableHighAccuracy: true });
+        }
+    }
+
+    initApp();
+</script>
+</body>
+</html>
