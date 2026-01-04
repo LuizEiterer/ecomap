@@ -26,7 +26,7 @@
         
         button { padding: 14px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; transition: all 0.2s ease; }
         .btn-save { background: var(--primary); width: 100%; font-size: 1rem; margin-top: 5px; }
-        .btn-sim { background: var(--accent); font-size: 0.7rem; }
+        .btn-sim { background: var(--accent); font-size: 0.7rem; min-width: 120px; }
         .btn-delete { background: var(--danger); padding: 5px 10px; font-size: 0.65rem; margin-top: 10px; width: 100%; }
         
         button:active { transform: scale(0.96); opacity: 0.9; }
@@ -102,6 +102,7 @@
     import { getFirestore, collection, addDoc, onSnapshot, query, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
     import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
+    // Configuração do Firebase
     const firebaseConfig = JSON.parse(__firebase_config);
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
@@ -111,6 +112,7 @@
     let map, userMarker;
     let currentCoords = [-15.7942, -47.8822]; 
     let isSimulacao = true;
+    let watchId = null;
     let currentUser = null;
     let base64Image = null;
     let isAdmin = false;
@@ -119,9 +121,9 @@
 
     async function initApp() {
         setupMap();
-        tentarLocalizacaoAutomatica();
-
+        
         try {
+            // Autenticação Silenciosa
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                 await signInWithCustomToken(auth, __initial_auth_token);
             } else {
@@ -143,22 +145,22 @@
             document.getElementById('cloud-status').innerText = "Erro Ligação";
         }
 
+        // Funções Globais
         window.salvarPonto = salvarPonto;
         window.toggleSimulacao = toggleSimulacao;
         window.deletePonto = deletePonto;
+        
+        // Sistema de Moderação (5 cliques no título)
         window.checkAdmin = () => {
             clickCount++;
             if (clickCount >= 5) {
                 const pass = prompt("Introduza a palavra-passe de administrador para moderar:");
-                if (pass === "admin123") { // Altere esta senha conforme desejar
+                if (pass === "admin123") { // Senha padrão
                     isAdmin = true;
                     document.getElementById('admin-tag').style.display = 'inline';
-                    alert("Modo Administrador Ativado! Agora pode apagar registos nos popups.");
-                    // Forçar atualização dos markers para mostrar botão delete
+                    alert("Modo Administrador Ativado!");
                     marcadoresNoMapa.forEach((marker, id) => {
-                        const data = marker._pontoData;
-                        marker.unbindPopup();
-                        vincularPopup(marker, id, data);
+                        vincularPopup(marker, id, marker._pontoData);
                     });
                 }
                 clickCount = 0;
@@ -166,6 +168,7 @@
             setTimeout(() => { clickCount = 0; }, 3000);
         };
 
+        // Pré-visualização e Compressão de Foto
         window.previewPhoto = (input) => {
             const file = input.files[0];
             if (file) {
@@ -191,23 +194,26 @@
         };
     }
 
+    // Inicialização do Mapa
     function setupMap() {
         map = L.map('map', { zoomControl: false }).setView(currentCoords, 15);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
-        userMarker = L.circleMarker(currentCoords, { radius: 10, fillColor: "#3498db", color: "#fff", weight: 3, opacity: 1, fillOpacity: 0.9 }).addTo(map);
-        map.on('click', (e) => { if(isSimulacao) { currentCoords = [e.latlng.lat, e.latlng.lng]; userMarker.setLatLng(e.latlng); } });
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
+            attribution: '© OpenStreetMap' 
+        }).addTo(map);
+        
+        userMarker = L.circleMarker(currentCoords, { 
+            radius: 10, fillColor: "#3498db", color: "#fff", weight: 3, opacity: 1, fillOpacity: 0.9 
+        }).addTo(map);
+        
+        map.on('click', (e) => { 
+            if(isSimulacao) { 
+                currentCoords = [e.latlng.lat, e.latlng.lng]; 
+                userMarker.setLatLng(e.latlng); 
+            } 
+        });
     }
 
-    function tentarLocalizacaoAutomatica() {
-        if ("geolocation" in navigator) {
-            navigator.geolocation.getCurrentPosition((pos) => {
-                currentCoords = [pos.coords.latitude, pos.coords.longitude];
-                userMarker.setLatLng(currentCoords);
-                map.setView(currentCoords, 16);
-            }, null, { enableHighAccuracy: true });
-        }
-    }
-
+    // Escuta em tempo real da Nuvem
     function ouvirDadosNuvem() {
         if (!currentUser) return;
         const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'nascentes');
@@ -229,14 +235,17 @@
         }, (error) => console.error(error));
     }
 
+    // Guardar novo ponto
     async function salvarPonto() {
         if (!currentUser) return;
         const desc = document.getElementById('desc-input').value;
         const status = document.getElementById('status-input').value;
         if (!desc.trim()) return alert("Adicione uma descrição.");
+        
         const btn = document.getElementById('save-btn');
         btn.disabled = true;
         btn.innerText = "A ENVIAR...";
+        
         try {
             const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'nascentes');
             await addDoc(colRef, {
@@ -248,32 +257,32 @@
             document.getElementById('photo-display-btn').innerText = "FOTO: NÃO ANEXADA";
             base64Image = null;
             alert("Registado com sucesso!");
-        } catch (error) { alert("Erro ao guardar."); }
+        } catch (error) { alert("Erro ao guardar na nuvem."); }
         finally { btn.disabled = false; btn.innerText = "📍 REGISTRAR NA NUVEM"; }
     }
 
+    // Apagar ponto (Admin apenas)
     async function deletePonto(id) {
         if (!isAdmin) return;
-        if (confirm("Tem a certeza que deseja apagar este registo permanentemente?")) {
+        if (confirm("Deseja apagar este registo permanentemente?")) {
             try {
                 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'nascentes', id);
                 await deleteDoc(docRef);
-                alert("Registo apagado.");
-            } catch (error) { alert("Erro ao apagar registo."); }
+            } catch (error) { alert("Erro ao apagar."); }
         }
     }
 
     function adicionarMarcadorMapa(id, ponto) {
         let cor = ponto.status === 'preservada' ? '#2ecc71' : (ponto.status === 'ameacada' ? '#f1c40f' : '#e74c3c');
         const marker = L.circleMarker([ponto.lat, ponto.lng], { radius: 8, fillColor: cor, color: "#000", weight: 1, fillOpacity: 1 }).addTo(map);
-        marker._pontoData = ponto; // Guardar dados para re-renderizar popup se virar admin
+        marker._pontoData = ponto;
         vincularPopup(marker, id, ponto);
         marcadoresNoMapa.set(id, marker);
     }
 
     function vincularPopup(marker, id, ponto) {
         let cor = ponto.status === 'preservada' ? '#2ecc71' : (ponto.status === 'ameacada' ? '#f1c40f' : '#e74c3c');
-        let fotoHtml = ponto.foto ? `<img src="${ponto.foto}" class="popup-img" onclick="window.open(this.src)">` : '<p style="color:#888;font-size:10px;">Sem foto anexada</p>';
+        let fotoHtml = ponto.foto ? `<img src="${ponto.foto}" class="popup-img" onclick="window.open(this.src)">` : '<p style="color:#888;font-size:10px;">Sem foto</p>';
         let deleteBtn = isAdmin ? `<button class="btn-delete" onclick="deletePonto('${id}')">APAGAR REGISTO</button>` : '';
 
         marker.bindPopup(`
@@ -281,23 +290,50 @@
                 <b style="text-transform: uppercase; color: ${cor}">Nascente ${ponto.status}</b><br>
                 ${fotoHtml}
                 <p style="margin: 8px 0; font-size: 13px;">${ponto.descricao}</p>
-                <small style="color: #888;">${new Date(ponto.data).toLocaleDateString('pt-PT')}</small>
+                <small style="color:#888">${new Date(ponto.data).toLocaleDateString()}</small>
                 ${deleteBtn}
             </div>
         `);
     }
 
+    // Alternar entre GPS Real e Simulação Manual
     function toggleSimulacao() {
-        isSimulacao = !isSimulacao;
         const btn = document.getElementById('sim-btn');
-        btn.innerText = isSimulacao ? "Modo Real: OFF" : "Modo Real: ON";
-        btn.style.background = isSimulacao ? "#3498db" : "#2ecc71";
-        if (!isSimulacao && "geolocation" in navigator) {
-            navigator.geolocation.watchPosition((pos) => {
-                currentCoords = [pos.coords.latitude, pos.coords.longitude];
-                userMarker.setLatLng(currentCoords);
-                if(!map.getBounds().contains(currentCoords)) map.panTo(currentCoords);
-            }, null, { enableHighAccuracy: true });
+        
+        if (isSimulacao) {
+            if ("geolocation" in navigator) {
+                btn.innerText = "A LIGAR GPS...";
+                btn.disabled = true;
+
+                watchId = navigator.geolocation.watchPosition(
+                    (pos) => {
+                        isSimulacao = false;
+                        btn.disabled = false;
+                        btn.innerText = "Modo Real: ON";
+                        btn.style.background = "#2ecc71";
+                        
+                        currentCoords = [pos.coords.latitude, pos.coords.longitude];
+                        userMarker.setLatLng(currentCoords);
+                        map.panTo(currentCoords);
+                    },
+                    (err) => {
+                        btn.disabled = false;
+                        btn.innerText = "Modo Real: OFF";
+                        let msg = "Erro GPS.";
+                        if(err.code === 1) msg = "Por favor, autorize a localização no cadeado da URL.";
+                        alert(msg);
+                        isSimulacao = true;
+                    },
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
+            } else {
+                alert("O seu navegador não suporta GPS.");
+            }
+        } else {
+            if (watchId) navigator.geolocation.clearWatch(watchId);
+            isSimulacao = true;
+            btn.innerText = "Modo Real: OFF";
+            btn.style.background = "#3498db";
         }
     }
 
