@@ -8,35 +8,64 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
     <style>
-        :root { --primary: #2ecc71; --dark: #1a1a1a; --accent: #3498db; --danger: #e74c3c; }
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--dark); color: white; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        
-        #header { padding: 12px 15px; background: #222; border-bottom: 2px solid var(--primary); display: flex; justify-content: space-between; align-items: center; z-index: 1010; }
-        #status-bar { font-size: 0.75rem; color: #aaa; padding: 6px; text-align: center; background: #000; border-bottom: 1px solid #333; z-index: 1009; }
-        
-        #map { flex-grow: 1; width: 100%; z-index: 1; background: #111; }
-        
-        #action-panel { padding: 15px; background: #222; border-radius: 20px 20px 0 0; box-shadow: 0 -5px 15px rgba(0,0,0,0.5); z-index: 1010; }
-        .input-group { margin-bottom: 12px; }
-        label { display: block; margin-bottom: 6px; font-size: 0.8rem; color: var(--primary); font-weight: bold; text-transform: uppercase; }
-        
-        select, textarea { width: 100%; box-sizing: border-box; background: #333; border: 1px solid #444; color: white; padding: 12px; border-radius: 10px; font-size: 14px; outline: none; }
-        
-        button { padding: 14px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; transition: all 0.2s ease; }
-        .btn-save { background: var(--primary); width: 100%; font-size: 1rem; }
-        .btn-save:disabled { background: #555; cursor: not-allowed; }
-        
-        .btn-sim { background: var(--accent); font-size: 0.7rem; min-width: 120px; }
-        
-        .pulse-indicator { width: 12px; height: 12px; background: var(--primary); border-radius: 50%; animation: pulse 2s infinite; }
-        .popup-img { width: 100%; border-radius: 5px; margin-top: 8px; max-height: 150px; object-fit: cover; }
-        
-        @keyframes pulse { 
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); } 
-            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(46, 204, 113, 0); } 
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); } 
-        }
-    </style>
+    :root { --primary: #2ecc71; --dark: #1a1a1a; --accent: #3498db; --danger: #e74c3c; }
+    
+    /* Ajuste para ocupar 100% da altura real da tela do celular */
+    body { 
+        margin: 0; 
+        font-family: 'Segoe UI', sans-serif; 
+        background: var(--dark); 
+        color: white; 
+        display: flex; 
+        flex-direction: column; 
+        height: 100vh; 
+        height: -webkit-fill-available; /* Correção para iOS/Chrome Mobile */
+        overflow: hidden; 
+    }
+
+    #header { padding: 8px 15px; background: #222; border-bottom: 2px solid var(--primary); display: flex; justify-content: space-between; align-items: center; z-index: 1010; }
+    #status-bar { font-size: 0.7rem; color: #aaa; padding: 4px; text-align: center; background: #000; border-bottom: 1px solid #333; z-index: 1009; }
+
+    /* O mapa agora ocupa o espaço que sobra, empurrando o painel para cima */
+    #map { flex: 1; width: 100%; z-index: 1; background: #111; }
+
+    /* Painel mais compacto para não sumir no fundo */
+    #action-panel { 
+        padding: 10px 15px 20px 15px; /* Aumento o padding inferior para não ficar colado na borda do celular */
+        background: #222; 
+        border-radius: 15px 15px 0 0; 
+        box-shadow: 0 -5px 15px rgba(0,0,0,0.5); 
+        z-index: 1010;
+    }
+
+    .input-group { margin-bottom: 8px; }
+    label { display: block; margin-bottom: 4px; font-size: 0.7rem; color: var(--primary); font-weight: bold; }
+
+    select, textarea { 
+        width: 100%; 
+        box-sizing: border-box; 
+        background: #333; 
+        border: 1px solid #444; 
+        color: white; 
+        padding: 8px; 
+        border-radius: 8px; 
+        font-size: 14px; 
+        outline: none; 
+    }
+
+    button { padding: 10px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; }
+    .btn-save { background: var(--primary); width: 100%; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+    .btn-save:disabled { background: #444; }
+    .btn-sim { background: var(--accent); font-size: 0.65rem; padding: 6px 10px; }
+
+    .pulse-indicator { width: 10px; height: 10px; background: var(--primary); border-radius: 50%; animation: pulse 2s infinite; }
+    
+    @keyframes pulse { 
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); } 
+        70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(46, 204, 113, 0); } 
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); } 
+    }
+</style>
 </head>
 <body>
 
