@@ -3,62 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EcoMap Pro: Mapeamento de Nascentes</title>
+    <title>EcoMap: Mapa Colaborativo de Nascentes</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
     <style>
         :root { --primary: #2ecc71; --dark: #1a1a1a; --accent: #3498db; --danger: #e74c3c; }
         
-        /* Força o body a ocupar a altura exata da tela visível */
-        html, body { 
-            height: 100%; 
-            margin: 0; 
-            padding: 0; 
-            overflow: hidden; 
-            background: var(--dark);
-        }
-
-        body { 
-            display: flex; 
-            flex-direction: column; 
-            font-family: 'Segoe UI', sans-serif; 
-        }
+        html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; background: var(--dark); }
+        body { display: flex; flex-direction: column; font-family: 'Segoe UI', sans-serif; }
 
         #header { padding: 8px 15px; background: #222; border-bottom: 2px solid var(--primary); display: flex; justify-content: space-between; align-items: center; z-index: 1010; flex-shrink: 0; }
         #status-bar { font-size: 0.7rem; color: #aaa; padding: 4px; text-align: center; background: #000; border-bottom: 1px solid #333; z-index: 1009; flex-shrink: 0; }
 
-        /* O segredo: o mapa cresce para ocupar o espaço, mas tem uma base mínima */
-        #map { 
-            flex-grow: 1; 
-            width: 100%; 
-            z-index: 1; 
-            background: #111; 
-        }
+        #map { flex-grow: 1; width: 100%; z-index: 1; background: #111; }
 
-        /* Painel compacto e fixo no rodapé */
         #action-panel { 
-            padding: 12px 15px 25px 15px; /* Padding extra no fundo para evitar barras do sistema */
-            background: #222; 
-            border-radius: 15px 15px 0 0; 
-            box-shadow: 0 -5px 15px rgba(0,0,0,0.5); 
-            z-index: 1010;
-            flex-shrink: 0;
+            padding: 12px 15px 25px 15px; background: #222; border-radius: 15px 15px 0 0; 
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.5); z-index: 1010; flex-shrink: 0;
         }
 
         .input-group { margin-bottom: 8px; }
         label { display: block; margin-bottom: 4px; font-size: 0.7rem; color: var(--primary); font-weight: bold; }
 
         select, textarea { 
-            width: 100%; 
-            box-sizing: border-box; 
-            background: #333; 
-            border: 1px solid #444; 
-            color: white; 
-            padding: 8px; 
-            border-radius: 8px; 
-            font-size: 14px; 
-            outline: none; 
+            width: 100%; box-sizing: border-box; background: #333; border: 1px solid #444; 
+            color: white; padding: 8px; border-radius: 8px; font-size: 14px; outline: none; 
         }
 
         button { padding: 10px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; }
@@ -66,14 +36,24 @@
         .btn-save:disabled { background: #444; }
         .btn-sim { background: var(--accent); font-size: 0.65rem; padding: 6px 10px; }
 
+        .title-main { color: white; }
+        .title-sub { color: var(--primary); font-size: 0.7rem; font-weight: normal; display: block; }
+
+        /* Modal Educacional */
+        #modal-ajuda {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 2000; overflow-y: auto; padding: 20px; box-sizing: border-box;
+        }
+        .modal-content { background: #222; border: 1px solid var(--primary); border-radius: 15px; padding: 20px; color: #eee; font-size: 0.85rem; line-height: 1.4; }
+        .modal-content h3 { color: var(--primary); border-bottom: 1px solid #444; padding-bottom: 8px; }
+        .modal-content h4 { color: var(--accent); margin: 15px 0 5px 0; }
+        .close-modal { background: var(--danger); color: white; width: 100%; margin-top: 20px; font-weight: bold; padding: 12px; border-radius: 8px; }
+        
+        .help-btn { background: #333; color: var(--primary); border: 1px solid var(--primary); border-radius: 50%; width: 18px; height: 18px; display: inline-block; text-align: center; font-size: 12px; cursor: pointer; margin-left: 5px; }
+
         .pulse-indicator { width: 10px; height: 10px; background: var(--primary); border-radius: 50%; animation: pulse 2s infinite; }
         .popup-img { width: 100%; border-radius: 5px; margin-top: 8px; max-height: 150px; object-fit: cover; }
-        
-        @keyframes pulse { 
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); } 
-            70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(46, 204, 113, 0); } 
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); } 
-        }
+        @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(46, 204, 113, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); } }
     </style>
 </head>
 <body>
@@ -81,7 +61,10 @@
 <div id="header">
     <div style="display: flex; align-items: center; gap: 8px;" onclick="window.checkAdmin()">
         <div class="pulse-indicator"></div>
-        <strong style="letter-spacing: 1px;">ECO-MAP <span style="color: var(--primary);">CLOUD</span></strong>
+        <div style="line-height: 1.1;">
+            <strong class="title-main" style="letter-spacing: 1px;">ECO-MAP</strong>
+            <span class="title-sub">Mapa colaborativo de nascentes</span>
+        </div>
     </div>
     <button class="btn-sim" onclick="window.toggleSimulacao()" id="sim-btn">Modo Real: OFF</button>
 </div>
@@ -95,11 +78,11 @@
 <div id="action-panel">
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;" class="input-group">
         <div>
-            <label>💧 Estado</label>
+            <label>💧 Estado <span class="help-btn" onclick="document.getElementById('modal-ajuda').style.display='block'">?</span></label>
             <select id="status-input">
-                <option value="preservada">Preservada</option>
-                <option value="ameacada">Ameaçada</option>
-                <option value="seca">Seca / Inativa</option>
+                <option value="preservada">Preservada (APP íntegra)</option>
+                <option value="ameacada">Ameaçada (Antrópica)</option>
+                <option value="seca">Seca (Inativa)</option>
             </select>
         </div>
         <div>
@@ -110,9 +93,27 @@
     </div>
     <div class="input-group">
         <label>📝 Descrição</label>
-        <textarea id="desc-input" rows="2" placeholder="Descreva a nascente..."></textarea>
+        <textarea id="desc-input" rows="2" placeholder="Ex: Presença de mata ciliar, solo protegido..."></textarea>
     </div>
     <button class="btn-save" id="save-btn" onclick="window.salvarPonto()" disabled>A CARREGAR...</button>
+</div>
+
+<div id="modal-ajuda">
+    <div class="modal-content">
+        <h3>Guia de Diagnóstico Ambiental</h3>
+        <p>Baseado no Código Florestal (Lei 12.651/12) e critérios hidrológicos.</p>
+        
+        <h4>1. Nascente Preservada</h4>
+        <p>Mata ciliar nativa em raio de 50m. Solo com serapilheira e água transparente.</p>
+
+        <h4>2. Nascente Ameaçada</h4>
+        <p>Vegetação fragmentada, presença de gado, espécies invasoras ou erosão inicial.</p>
+
+        <h4>3. Nascente Inativa/Seca</h4>
+        <p>Afloramento seco por assoreamento ou desmatamento total. Solo compactado.</p>
+
+        <button class="close-modal" onclick="document.getElementById('modal-ajuda').style.display='none'">ENTENDI E VOLTAR</button>
+    </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -136,7 +137,7 @@
     const auth = getAuth(app);
 
     let map, userMarker, watchId = null, currentUser = null, base64Image = null, isAdmin = false, clickCount = 0;
-    let currentCoords = [-21.805, -43.326]; // Atualizado para sua região aproximada
+    let currentCoords = [-21.805, -43.326]; 
     let isSimulacao = true;
     const marcadoresNoMapa = new Map();
 
@@ -222,21 +223,10 @@
     };
 
     function init() {
-        // Correção crítica: invalidateSize garante que o mapa apareça mesmo com CSS flexível
         map = L.map('map', { zoomControl: false }).setView(currentCoords, 15);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        
-        userMarker = L.circleMarker(currentCoords, { 
-            radius: 10, fillColor: "#3498db", color: "#fff", weight: 3, fillOpacity: 0.9 
-        }).addTo(map);
-
-        map.on('click', (e) => { 
-            if(isSimulacao) { 
-                currentCoords = [e.latlng.lat, e.latlng.lng]; 
-                userMarker.setLatLng(e.latlng); 
-            } 
-        });
-
+        userMarker = L.circleMarker(currentCoords, { radius: 10, fillColor: "#3498db", color: "#fff", weight: 3, fillOpacity: 0.9 }).addTo(map);
+        map.on('click', (e) => { if(isSimulacao) { currentCoords = [e.latlng.lat, e.latlng.lng]; userMarker.setLatLng(e.latlng); } });
         setTimeout(() => { map.invalidateSize(); }, 500);
 
         signInAnonymously(auth).then(() => {
