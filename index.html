@@ -248,12 +248,51 @@
             snap.docChanges().forEach(change => {
                 const data = change.doc.data();
                 const id = change.doc.id;
+                
                 if (change.type === "added" || change.type === "modified") {
                     if (marcadoresNoMapa.has(id)) map.removeLayer(marcadoresNoMapa.get(id));
-                    const cor = data.status === 'preservada' ? '#2ecc71' : (data.status === 'ameacada' ? '#f1c40f' : '#e74c3c');
-                    const m = L.circleMarker([data.lat, data.lng], { radius: 8, fillColor: cor, color: "#000", weight: 1, fillOpacity: 1 }).addTo(map);
+                    
+                    // Definição de cores e ícones por status
+                    const cores = {
+                        preservada: '#2ecc71',
+                        ameacada: '#f1c40f',
+                        seca: '#e74c3c'
+                    };
+                    const cor = cores[data.status] || '#3498db';
+
+                    // Tratamento e formatação da Data
+                    const dataObj = data.data ? new Date(data.data) : new Date();
+                    const dataFormatada = dataObj.toLocaleDateString('pt-BR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                    });
+
+                    const m = L.circleMarker([data.lat, data.lng], { 
+                        radius: 8, 
+                        fillColor: cor, 
+                        color: "#000", 
+                        weight: 1, 
+                        fillOpacity: 1 
+                    }).addTo(map);
+
                     let fotoHtml = data.foto ? `<img src="${data.foto}" class="popup-img">` : '';
-                    m.bindPopup(`<b>${data.status.toUpperCase()}</b><br>${fotoHtml}<p>${data.descricao}</p>`);
+                    
+                    // Conteúdo do Popup com a Data em destaque
+                    m.bindPopup(`
+                        <div style="min-width: 150px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.65rem; color: #888; border-bottom: 1px solid #eee; margin-bottom: 5px; padding-bottom: 2px;">
+                                <span>📅 ${dataFormatada}</span>
+                                <span>ID: ${id.slice(0,5)}</span>
+                            </div>
+                            <b style="color: ${cor}; font-size: 0.9rem;">${data.status.toUpperCase()}</b>
+                            ${fotoHtml}
+                            <p style="margin-top: 8px; font-size: 0.8rem; color: #333; line-height: 1.2;">
+                                ${data.descricao}
+                            </p>
+                        </div>
+                    `);
+                    
                     marcadoresNoMapa.set(id, m);
                 }
             });
