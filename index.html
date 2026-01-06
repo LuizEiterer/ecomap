@@ -8,64 +8,73 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
     <style>
-    :root { --primary: #2ecc71; --dark: #1a1a1a; --accent: #3498db; --danger: #e74c3c; }
-    
-    /* Ajuste para ocupar 100% da altura real da tela do celular */
-    body { 
-        margin: 0; 
-        font-family: 'Segoe UI', sans-serif; 
-        background: var(--dark); 
-        color: white; 
-        display: flex; 
-        flex-direction: column; 
-        height: 100vh; 
-        height: -webkit-fill-available; /* Correção para iOS/Chrome Mobile */
-        overflow: hidden; 
-    }
+        :root { --primary: #2ecc71; --dark: #1a1a1a; --accent: #3498db; --danger: #e74c3c; }
+        
+        /* Força o body a ocupar a altura exata da tela visível */
+        html, body { 
+            height: 100%; 
+            margin: 0; 
+            padding: 0; 
+            overflow: hidden; 
+            background: var(--dark);
+        }
 
-    #header { padding: 8px 15px; background: #222; border-bottom: 2px solid var(--primary); display: flex; justify-content: space-between; align-items: center; z-index: 1010; }
-    #status-bar { font-size: 0.7rem; color: #aaa; padding: 4px; text-align: center; background: #000; border-bottom: 1px solid #333; z-index: 1009; }
+        body { 
+            display: flex; 
+            flex-direction: column; 
+            font-family: 'Segoe UI', sans-serif; 
+        }
 
-    /* O mapa agora ocupa o espaço que sobra, empurrando o painel para cima */
-    #map { flex: 1; width: 100%; z-index: 1; background: #111; }
+        #header { padding: 8px 15px; background: #222; border-bottom: 2px solid var(--primary); display: flex; justify-content: space-between; align-items: center; z-index: 1010; flex-shrink: 0; }
+        #status-bar { font-size: 0.7rem; color: #aaa; padding: 4px; text-align: center; background: #000; border-bottom: 1px solid #333; z-index: 1009; flex-shrink: 0; }
 
-    /* Painel mais compacto para não sumir no fundo */
-    #action-panel { 
-        padding: 10px 15px 20px 15px; /* Aumento o padding inferior para não ficar colado na borda do celular */
-        background: #222; 
-        border-radius: 15px 15px 0 0; 
-        box-shadow: 0 -5px 15px rgba(0,0,0,0.5); 
-        z-index: 1010;
-    }
+        /* O segredo: o mapa cresce para ocupar o espaço, mas tem uma base mínima */
+        #map { 
+            flex-grow: 1; 
+            width: 100%; 
+            z-index: 1; 
+            background: #111; 
+        }
 
-    .input-group { margin-bottom: 8px; }
-    label { display: block; margin-bottom: 4px; font-size: 0.7rem; color: var(--primary); font-weight: bold; }
+        /* Painel compacto e fixo no rodapé */
+        #action-panel { 
+            padding: 12px 15px 25px 15px; /* Padding extra no fundo para evitar barras do sistema */
+            background: #222; 
+            border-radius: 15px 15px 0 0; 
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.5); 
+            z-index: 1010;
+            flex-shrink: 0;
+        }
 
-    select, textarea { 
-        width: 100%; 
-        box-sizing: border-box; 
-        background: #333; 
-        border: 1px solid #444; 
-        color: white; 
-        padding: 8px; 
-        border-radius: 8px; 
-        font-size: 14px; 
-        outline: none; 
-    }
+        .input-group { margin-bottom: 8px; }
+        label { display: block; margin-bottom: 4px; font-size: 0.7rem; color: var(--primary); font-weight: bold; }
 
-    button { padding: 10px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; }
-    .btn-save { background: var(--primary); width: 100%; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
-    .btn-save:disabled { background: #444; }
-    .btn-sim { background: var(--accent); font-size: 0.65rem; padding: 6px 10px; }
+        select, textarea { 
+            width: 100%; 
+            box-sizing: border-box; 
+            background: #333; 
+            border: 1px solid #444; 
+            color: white; 
+            padding: 8px; 
+            border-radius: 8px; 
+            font-size: 14px; 
+            outline: none; 
+        }
 
-    .pulse-indicator { width: 10px; height: 10px; background: var(--primary); border-radius: 50%; animation: pulse 2s infinite; }
-    
-    @keyframes pulse { 
-        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); } 
-        70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(46, 204, 113, 0); } 
-        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); } 
-    }
-</style>
+        button { padding: 10px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; }
+        .btn-save { background: var(--primary); width: 100%; font-size: 0.9rem; text-transform: uppercase; }
+        .btn-save:disabled { background: #444; }
+        .btn-sim { background: var(--accent); font-size: 0.65rem; padding: 6px 10px; }
+
+        .pulse-indicator { width: 10px; height: 10px; background: var(--primary); border-radius: 50%; animation: pulse 2s infinite; }
+        .popup-img { width: 100%; border-radius: 5px; margin-top: 8px; max-height: 150px; object-fit: cover; }
+        
+        @keyframes pulse { 
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); } 
+            70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(46, 204, 113, 0); } 
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); } 
+        }
+    </style>
 </head>
 <body>
 
@@ -109,12 +118,10 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script type="module">
-    // Importação dos módulos do Firebase
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
     import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
     import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
-    // --- CONFIGURAÇÃO DO SEU FIREBASE ---
     const firebaseConfig = {
         apiKey: "AIzaSyAojYYMUUXITjqGofL09yTqp87L_wR9494",
         authDomain: "ecomap---nascentes.firebaseapp.com",
@@ -124,17 +131,15 @@
         appId: "1:794098061770:web:b990a689ad4a934dc63f33"
     };
 
-    // Inicialização
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
 
     let map, userMarker, watchId = null, currentUser = null, base64Image = null, isAdmin = false, clickCount = 0;
-    let currentCoords = [-15.7942, -47.8822]; // Brasília como padrão inicial
+    let currentCoords = [-21.805, -43.326]; // Atualizado para sua região aproximada
     let isSimulacao = true;
     const marcadoresNoMapa = new Map();
 
-    // Torna funções disponíveis para os botões HTML
     window.toggleSimulacao = () => {
         const btn = document.getElementById('sim-btn');
         if (!isSimulacao) {
@@ -164,32 +169,22 @@
     window.salvarPonto = async () => {
         const desc = document.getElementById('desc-input').value;
         const status = document.getElementById('status-input').value;
-        if (!desc.trim()) return alert("Por favor, adicione uma descrição.");
-        
+        if (!desc.trim()) return alert("Adicione uma descrição.");
         const btn = document.getElementById('save-btn');
         btn.disabled = true; btn.innerText = "A ENVIAR...";
-        
         try {
             await addDoc(collection(db, 'nascentes'), {
-                lat: currentCoords[0],
-                lng: currentCoords[1],
-                status: status,
-                descricao: desc.trim(),
-                foto: base64Image,
-                autor: currentUser ? currentUser.uid : "anonimo",
+                lat: currentCoords[0], lng: currentCoords[1],
+                status: status, descricao: desc.trim(),
+                foto: base64Image, autor: currentUser ? currentUser.uid : "anonimo",
                 data: new Date().toISOString()
             });
-            alert("Nascente registada com sucesso!");
+            alert("Sucesso!");
             document.getElementById('desc-input').value = "";
             base64Image = null;
             document.getElementById('photo-display-btn').innerText = "FOTO: NÃO ANEXADA";
-        } catch (e) { 
-            console.error(e);
-            alert("Erro ao salvar. Verifique se as Regras do Firestore permitem escrita."); 
-        } finally { 
-            btn.disabled = false; 
-            btn.innerText = "📍 REGISTRAR NA NUVEM"; 
-        }
+        } catch (e) { alert("Erro ao salvar."); } 
+        finally { btn.disabled = false; btn.innerText = "📍 REGISTRAR NA NUVEM"; }
     };
 
     window.previewPhoto = (input) => {
@@ -201,13 +196,9 @@
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
                     const max_size = 600;
-                    let width = img.width;
-                    let height = img.height;
-                    if (width > height) {
-                        if (width > max_size) { height *= max_size / width; width = max_size; }
-                    } else {
-                        if (height > max_size) { width *= max_size / height; height = max_size; }
-                    }
+                    let width = img.width, height = img.height;
+                    if (width > height) { if (width > max_size) { height *= max_size / width; width = max_size; } }
+                    else { if (height > max_size) { width *= max_size / height; height = max_size; } }
                     canvas.width = width; canvas.height = height;
                     canvas.getContext('2d').drawImage(img, 0, 0, width, height);
                     base64Image = canvas.toDataURL('image/jpeg', 0.6);
@@ -222,23 +213,22 @@
     window.checkAdmin = () => {
         clickCount++;
         if (clickCount >= 5) {
-            if (prompt("Senha de Admin:") === "admin123") {
+            if (prompt("Senha:") === "admin123") {
                 isAdmin = true;
                 document.getElementById('admin-tag').style.display = 'inline';
-                alert("Modo Administrador!");
             }
             clickCount = 0;
         }
     };
 
-    // Inicialização do Mapa e Autenticação
     function init() {
+        // Correção crítica: invalidateSize garante que o mapa apareça mesmo com CSS flexível
         map = L.map('map', { zoomControl: false }).setView(currentCoords, 15);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
         
         userMarker = L.circleMarker(currentCoords, { 
             radius: 10, fillColor: "#3498db", color: "#fff", weight: 3, fillOpacity: 0.9 
-        }).addTo(map).bindPopup("Sua localização (Arraste ou clique no mapa)");
+        }).addTo(map);
 
         map.on('click', (e) => { 
             if(isSimulacao) { 
@@ -247,7 +237,8 @@
             } 
         });
 
-        // Autenticação anônima do Firebase
+        setTimeout(() => { map.invalidateSize(); }, 500);
+
         signInAnonymously(auth).then(() => {
             onAuthStateChanged(auth, (user) => {
                 if (user) {
@@ -259,11 +250,7 @@
                     ouvirDados();
                 }
             });
-        }).catch(err => {
-            console.error("Erro Auth:", err);
-            document.getElementById('cloud-status').innerText = "Erro de Ligação";
-            document.getElementById('cloud-status').style.color = "red";
-        });
+        }).catch(err => { console.error(err); });
     }
 
     function ouvirDados() {
@@ -271,24 +258,12 @@
             snap.docChanges().forEach(change => {
                 const data = change.doc.data();
                 const id = change.doc.id;
-                
                 if (change.type === "added" || change.type === "modified") {
                     if (marcadoresNoMapa.has(id)) map.removeLayer(marcadoresNoMapa.get(id));
-                    
                     const cor = data.status === 'preservada' ? '#2ecc71' : (data.status === 'ameacada' ? '#f1c40f' : '#e74c3c');
-                    const m = L.circleMarker([data.lat, data.lng], { 
-                        radius: 8, fillColor: cor, color: "#000", weight: 1, fillOpacity: 1 
-                    }).addTo(map);
-                    
+                    const m = L.circleMarker([data.lat, data.lng], { radius: 8, fillColor: cor, color: "#000", weight: 1, fillOpacity: 1 }).addTo(map);
                     let fotoHtml = data.foto ? `<img src="${data.foto}" class="popup-img">` : '';
-                    m.bindPopup(`
-                        <div style="color:black">
-                            <strong style="text-transform:uppercase">${data.status}</strong><br>
-                            ${fotoHtml}
-                            <p style="margin:5px 0">${data.descricao}</p>
-                            <small style="color:gray">${new Date(data.data).toLocaleDateString()}</small>
-                        </div>
-                    `);
+                    m.bindPopup(`<b>${data.status.toUpperCase()}</b><br>${fotoHtml}<p>${data.descricao}</p>`);
                     marcadoresNoMapa.set(id, m);
                 }
             });
