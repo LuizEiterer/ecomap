@@ -291,35 +291,57 @@ body {
     }
 
     function init() {
-        map = L.map('map', { zoomControl: false }).setView(currentCoords, 15);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        
-        userMarker = L.circleMarker(currentCoords, {
-            radius: 10, fillColor: "#3498db", color: "#fff", weight: 3, fillOpacity: 0.9
-        }).addTo(map);
+    // 1. Definimos as fontes de imagem (Camadas)
+    const mapaRuas = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+    });
 
-        map.on('click', (e) => {
-            if(isSimulacao) {
-                currentCoords = [e.latlng.lat, e.latlng.lng];
-                userMarker.setLatLng(e.latlng);
-            }
-        });
+    const mapaSatelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EBP, and the GIS User Community'
+    });
 
-        signInAnonymously(auth).catch(console.error);
+    // 2. Criamos o mapa iniciando com a vista de Satélite
+    map = L.map('map', { 
+        zoomControl: false,
+        layers: [mapaSatelite] // Define o satélite como padrão ao abrir
+    }).setView(currentCoords, 15);
 
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                currentUser = user;
-                document.getElementById('cloud-status').innerText = "Ligado";
-                document.getElementById('cloud-status').style.color = "#2ecc71";
-                document.getElementById('save-btn').disabled = false;
-                document.getElementById('save-btn').innerText = "📍 REGISTRAR PONTO";
-                ouvirDados();
-            }
-        });
-        
-        setTimeout(() => map.invalidateSize(), 500);
-    }
+    // 3. Adicionamos o botão de escolha no canto superior direito
+    const baseMaps = {
+        "🛰️ Satélite": mapaSatelite,
+        "🗺️ Mapa": mapaRuas
+    };
+    L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
+    
+    // 4. Marcador do usuário (Círculo azul)
+    userMarker = L.circleMarker(currentCoords, {
+        radius: 10, fillColor: "#3498db", color: "#fff", weight: 3, fillOpacity: 0.9
+    }).addTo(map);
+
+    // Configuração de clique para simulação
+    map.on('click', (e) => {
+        if(isSimulacao) {
+            currentCoords = [e.latlng.lat, e.latlng.lng];
+            userMarker.setLatLng(e.latlng);
+        }
+    });
+
+    // Autenticação e Sincronização
+    signInAnonymously(auth).catch(console.error);
+
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            currentUser = user;
+            document.getElementById('cloud-status').innerText = "Ligado";
+            document.getElementById('cloud-status').style.color = "#2ecc71";
+            document.getElementById('save-btn').disabled = false;
+            document.getElementById('save-btn').innerText = "📍 REGISTRAR PONTO";
+            ouvirDados();
+        }
+    });
+    
+    setTimeout(() => map.invalidateSize(), 500);
+}
 
     window.onload = init;
 </script>
