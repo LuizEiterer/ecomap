@@ -9,71 +9,71 @@
     
     <style>
         :root { 
-    --primary: #2ecc71; 
-    --dark: #1a1a1a; 
-    --accent: #3498db; 
-    --danger: #e74c3c; 
-}
-       html, body { 
-    height: 100dvh; /* Usa a altura dinâmica para celular */
-    margin: 0; 
-    padding: 0; 
-    overflow: hidden; 
-    background: var(--dark); 
-    font-family: 'Segoe UI', sans-serif; 
-}
-body { 
-    display: flex; 
-    flex-direction: column; 
-    height: 100dvh; 
-}
+            --primary: #2ecc71; 
+            --dark: #1a1a1a; 
+            --accent: #3498db; 
+            --danger: #e74c3c; 
+        }
+        html, body { 
+            height: 100dvh;
+            margin: 0; 
+            padding: 0; 
+            overflow: hidden; 
+            background: var(--dark); 
+            font-family: 'Segoe UI', sans-serif; 
+        }
+        body { 
+            display: flex; 
+            flex-direction: column; 
+        }
         #header { padding: 12px; background: #222; border-bottom: 2px solid var(--primary); display: flex; justify-content: space-between; align-items: center; z-index: 1010; }
         #status-bar { font-size: 0.7rem; color: #aaa; padding: 4px; text-align: center; background: #000; z-index: 1009; }
         #map { flex: 1; width: 100%; z-index: 1; background: #111; }
+        
         #action-panel { 
-    padding: 12px; 
-    background: #222; 
-    border-radius: 15px 15px 0 0; 
-    box-shadow: 0 -5px 15px rgba(0,0,0,0.5); 
-    z-index: 1010;
-    padding-bottom: env(safe-area-inset-bottom); /* Proteção extra para iPhones */
-}
-        .input-group { margin-bottom: 8px; }
+            padding: 12px; 
+            background: #222; 
+            border-top: 2px solid #333;
+            z-index: 1010;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .input-group { margin-bottom: 10px; }
         label { display: block; font-size: 0.7rem; color: var(--primary); font-weight: bold; margin-bottom: 4px; }
-        select, textarea { width: 100%; box-sizing: border-box; background: #333; border: 1px solid #444; color: white; padding: 10px; border-radius: 8px; outline: none; }
+        select, textarea { width: 100%; box-sizing: border-box; background: #333; border: 1px solid #444; color: white; padding: 10px; border-radius: 8px; outline: none; font-size: 0.9rem; }
+        textarea { resize: none; }
+        
         button { padding: 12px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; width: 100%; }
-        .btn-save { background: var(--primary); text-transform: uppercase; }
+        .btn-save { background: var(--primary); text-transform: uppercase; margin-top: 5px; }
         .btn-sim { background: var(--accent); font-size: 0.7rem; width: auto; padding: 6px 12px; }
+        
         .pulse { width: 10px; height: 10px; background: var(--primary); border-radius: 50%; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } } 
         
-/* Estilos para os Modais */
+        /* Modais */
         .modal-overlay {
-         display: none; 
-        position: fixed; 
-         top: 0; left: 0; 
-         width: 100%; height: 100%; 
-         background: rgba(0,0,0,0.85); 
-        z-index: 3000; 
-        align-items: center; 
-        justify-content: center;
-        padding: 20px;
-}
+            display: none; 
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.85); 
+            z-index: 3000; 
+            align-items: center; 
+            justify-content: center;
+            padding: 20px;
+        }
         .modal-content {
-        background: #1a1a1a;
-        border: 1px solid #2ecc71;
-        border-radius: 15px;
-        padding: 25px;
-        max-width: 450px;
-        width: 100%;
-        color: white;
-        font-family: sans-serif;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-}
-    .modal-content h3 { color: #2ecc71; margin-top: 0; font-size: 1.2rem; border-bottom: 1px solid #333; padding-bottom: 10px; }
-    .modal-content p { font-size: 0.9rem; line-height: 1.5; color: #ddd; }
-    .btn-entendi { background: #e74c3c; width: 100%; margin-top: 20px; padding: 12px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; text-transform: uppercase; }
-    .help-icon { display: inline-block; width: 16px; height: 16px; background: #444; color: #2ecc71; border: 1px solid #2ecc71; border-radius: 50%; text-align: center; font-size: 11px; line-height: 16px; cursor: pointer; margin-left: 5px; vertical-align: middle; }
+            background: #1a1a1a;
+            border: 1px solid var(--primary);
+            border-radius: 15px;
+            padding: 20px;
+            max-width: 400px;
+            width: 100%;
+            color: white;
+        }
+        .modal-content h3 { color: var(--primary); margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .btn-entendi { background: var(--danger); margin-top: 15px; text-transform: uppercase; }
+        .help-icon { display: inline-block; width: 18px; height: 18px; background: #333; color: var(--primary); border: 1px solid var(--primary); border-radius: 50%; text-align: center; font-size: 12px; line-height: 18px; cursor: pointer; margin-left: 5px; }
     </style>
 </head>
 <body>
@@ -97,23 +97,20 @@ body {
 
 <div id="modal-diagnostico" class="modal-overlay">
     <div class="modal-content">
-        <h3>Guia de Diagnóstico Ambiental</h3>
-        <p><small>Baseado no Código Florestal (Lei 12.651/12)</small></p>
-        <p><b>1. Preservada:</b> Mata nativa (APP) em raio de 50m. Solo protegido.</p>
-        <p><b>2. Ameaçada:</b> Presença de gado, erosão, lixo, cimentação, canalização ou espécies invasoras.</p>
-        <p><b>3. Inativa/Seca:</b> Afloramento sem água por assoreamento ou degradação total.</p>
-        <button class="btn-entendi" onclick="fecharModais()">ENTENDI E VOLTAR</button>
+        <h3>Guia Ambiental</h3>
+        <p><b>1. Preservada:</b> Mata nativa em raio de 50m.</p>
+        <p><b>2. Ameaçada:</b> Gado, erosão, lixo ou construções.</p>
+        <p><b>3. Seca:</b> Solo compactado, sem afloramento.</p>
+        <button class="btn-entendi" onclick="fecharModais()">FECHAR</button>
     </div>
 </div>
 
 <div id="modal-foto" class="modal-overlay">
     <div class="modal-content">
-        <h3>Educação Digital: Foto Ideal</h3>
-        <p>Uma boa foto é essencial para a validação técnica do ponto:</p>
-        <p>📸 <b>Enquadramento:</b> Tente mostrar a água e a vegetação ao redor.</p>
-        <p>💡 <b>Luz:</b> Evite fotos contra o sol direto.</p>
-        <p>🚫 <b>Evite:</b> Fotos desfocadas ou de pessoas; foque no elemento ambiental.</p>
-        <button class="btn-entendi" onclick="fecharModais()">ENTENDI E VOLTAR</button>
+        <h3>Foto Ideal</h3>
+        <p>📸 Mostre a água e a vegetação próxima.</p>
+        <p>💡 Evite fotos tremidas ou contra o sol.</p>
+        <button class="btn-entendi" onclick="fecharModais()">FECHAR</button>
     </div>
 </div>
 
@@ -133,7 +130,12 @@ body {
             <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none" onchange="previewPhoto(this)">
         </div>
     </div>
+
+    <div class="input-group">
+        <label>📝 DESCRIÇÃO DA NASCENTE</label>
+        <textarea id="desc-input" rows="2" placeholder="Descreva as condições do local..."></textarea>
     </div>
+
     <button class="btn-save" id="save-btn" onclick="salvarPonto()" disabled>CARREGANDO...</button>
 </div>
 
@@ -162,18 +164,12 @@ body {
     let isSimulacao = true;
     let watchId = null;
 
-    // --- FUNÇÕES DOS MODAIS (CORRIGIDAS) ---
-    window.abrirModal = (id) => {
-        const modal = document.getElementById(id);
-        if(modal) modal.style.display = 'flex';
+    window.abrirModal = (id) => { document.getElementById(id).style.display = 'flex'; };
+    window.fecharModais = () => { 
+        document.getElementById('modal-diagnostico').style.display = 'none'; 
+        document.getElementById('modal-foto').style.display = 'none'; 
     };
 
-    window.fecharModais = () => {
-        document.getElementById('modal-diagnostico').style.display = 'none';
-        document.getElementById('modal-foto').style.display = 'none';
-    };
-
-    // --- OUTRAS FUNÇÕES DO SISTEMA ---
     window.toggleSimulacao = () => {
         const btn = document.getElementById('sim-btn');
         if (!isSimulacao) {
@@ -223,7 +219,7 @@ body {
         if (!currentUser) return alert("Aguardando conexão...");
         const desc = document.getElementById('desc-input').value;
         const status = document.getElementById('status-input').value;
-        if (!desc) return alert("Descreva a nascente.");
+        if (!desc) return alert("Por favor, descreva a nascente.");
 
         const btn = document.getElementById('save-btn');
         btn.innerText = "ENVIANDO...";
@@ -236,7 +232,7 @@ body {
                 foto: base64Image,
                 data: new Date().toISOString()
             });
-            alert("Sucesso!");
+            alert("Ponto registrado com sucesso!");
             document.getElementById('desc-input').value = "";
             base64Image = null;
             document.getElementById('photo-btn').innerText = "ANEXAR FOTO";
@@ -254,94 +250,47 @@ body {
             snap.docChanges().forEach(change => {
                 if (change.type === "added") {
                     const data = change.doc.data();
-                    const idDoc = change.doc.id;
                     const cores = { preservada: '#2ecc71', ameacada: '#f1c40f', seca: '#e74c3c' };
-                    
                     const m = L.circleMarker([data.lat, data.lng], {
                         radius: 8, fillColor: cores[data.status] || '#3498db', color: "#000", weight: 1, fillOpacity: 1
                     }).addTo(map);
 
-                    let dataExibicao = "Sem data";
-                    if (data.data) {
-                        const d = new Date(data.data);
-                        dataExibicao = d.toLocaleDateString('pt-BR') + " " + d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-                    }
-
-                    const fotoHtml = data.foto ? 
-                        `<img src="${data.foto}" style="width:100%; border-radius:8px; margin-top:10px;">` : 
-                        `<div style="margin-top:10px; font-size:10px; color:#aaa; text-align:center;">Sem foto</div>`;
-                    
-                    const popupConteudo = `
-                        <div style="min-width: 180px; font-family: sans-serif;">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <b style="text-transform: uppercase; color: ${cores[data.status]};">${data.status}</b>
-                                <span style="font-size: 8px; color: #999;">ID: ${idDoc.slice(-5)}</span>
-                            </div>
-                            <div style="font-size: 13px; margin: 5px 0;">${data.descricao}</div>
-                            ${fotoHtml}
-                            <div style="margin-top: 8px; border-top: 1px solid #eee; font-size: 10px; color: #888; text-align: right;">
-                                📅 ${dataExibicao}
-                            </div>
-                        </div>
-                    `;
-                    m.bindPopup(popupConteudo);
+                    const fotoHtml = data.foto ? `<img src="${data.foto}" style="width:100%; border-radius:8px; margin-top:10px;">` : '';
+                    m.bindPopup(`<b>${data.status.toUpperCase()}</b><br>${data.descricao}${fotoHtml}`);
                 }
             });
         });
     }
 
     function init() {
-    // 1. Definimos as fontes de imagem (Camadas)
-    const mapaRuas = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap'
-    });
+        const mapaRuas = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
+        const mapaSatelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}');
 
-    const mapaSatelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EBP, and the GIS User Community'
-    });
+        map = L.map('map', { zoomControl: false, layers: [mapaSatelite] }).setView(currentCoords, 15);
+        L.control.layers({"🛰️ Satélite": mapaSatelite, "🗺️ Mapa": mapaRuas}, null, { position: 'topright' }).addTo(map);
+        
+        userMarker = L.circleMarker(currentCoords, { radius: 10, fillColor: "#3498db", color: "#fff", weight: 3, fillOpacity: 0.9 }).addTo(map);
 
-    // 2. Criamos o mapa iniciando com a vista de Satélite
-    map = L.map('map', { 
-        zoomControl: false,
-        layers: [mapaSatelite] // Define o satélite como padrão ao abrir
-    }).setView(currentCoords, 15);
+        map.on('click', (e) => {
+            if(isSimulacao) {
+                currentCoords = [e.latlng.lat, e.latlng.lng];
+                userMarker.setLatLng(e.latlng);
+            }
+        });
 
-    // 3. Adicionamos o botão de escolha no canto superior direito
-    const baseMaps = {
-        "🛰️ Satélite": mapaSatelite,
-        "🗺️ Mapa": mapaRuas
-    };
-    L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
-    
-    // 4. Marcador do usuário (Círculo azul)
-    userMarker = L.circleMarker(currentCoords, {
-        radius: 10, fillColor: "#3498db", color: "#fff", weight: 3, fillOpacity: 0.9
-    }).addTo(map);
-
-    // Configuração de clique para simulação
-    map.on('click', (e) => {
-        if(isSimulacao) {
-            currentCoords = [e.latlng.lat, e.latlng.lng];
-            userMarker.setLatLng(e.latlng);
-        }
-    });
-
-    // Autenticação e Sincronização
-    signInAnonymously(auth).catch(console.error);
-
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            currentUser = user;
-            document.getElementById('cloud-status').innerText = "Ligado";
-            document.getElementById('cloud-status').style.color = "#2ecc71";
-            document.getElementById('save-btn').disabled = false;
-            document.getElementById('save-btn').innerText = "📍 REGISTRAR PONTO";
-            ouvirDados();
-        }
-    });
-    
-    setTimeout(() => map.invalidateSize(), 500);
-}
+        signInAnonymously(auth).catch(console.error);
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('cloud-status').innerText = "Ligado";
+                document.getElementById('cloud-status').style.color = "#2ecc71";
+                document.getElementById('save-btn').disabled = false;
+                document.getElementById('save-btn').innerText = "📍 REGISTRAR PONTO";
+                ouvirDados();
+            }
+        });
+        setTimeout(() => map.invalidateSize(), 500);
+    }
 
     window.onload = init;
 </script>
