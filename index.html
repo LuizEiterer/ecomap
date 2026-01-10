@@ -209,21 +209,60 @@
     function ouvirDados() {
         onSnapshot(collection(db, 'nascentes'), (snap) => {
             snap.docChanges().forEach(change => {
-                const data = change.doc.data();
-                const id = change.doc.id;
                 if (change.type === "added") {
+                    const data = change.doc.data();
+                    const idDocumento = change.doc.id; // Captura o ID do Firebase
                     const cores = { preservada: '#2ecc71', ameacada: '#f1c40f', seca: '#e74c3c' };
+                    
+                    // Criar o marcador no mapa
                     const m = L.circleMarker([data.lat, data.lng], {
-                        radius: 8, fillColor: cores[data.status], color: "#000", weight: 1, fillOpacity: 1
+                        radius: 8, 
+                        fillColor: cores[data.status] || '#3498db', 
+                        color: "#000", 
+                        weight: 1, 
+                        fillOpacity: 1
                     }).addTo(map);
-                    m.bindPopup(`<b>${data.status.toUpperCase()}</b><br>${data.descricao}`);
+
+                    // Formatação amigável da Data e Hora
+                    let dataExibicao = "Data não registrada";
+                    if (data.data) {
+                        const d = new Date(data.data);
+                        dataExibicao = d.toLocaleDateString('pt-BR') + " às " + d.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+                    }
+
+                    // Preparar o HTML da Foto (se existir)
+                    const fotoHtml = data.foto ? 
+                        `<img src="${data.foto}" style="width:100%; border-radius:8px; margin-top:10px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">` : 
+                        `<div style="margin-top:10px; color:#999; font-size:11px; text-align:center; border:1px dashed #ccc; padding:10px; border-radius:8px;">Sem foto anexada</div>`;
+                    
+                    // Montar o Popup completo
+                    const popupConteudo = `
+                        <div style="min-width: 180px; font-family: sans-serif; line-height: 1.4;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                                <b style="text-transform: uppercase; color: ${cores[data.status]}; font-size: 14px;">${data.status}</b>
+                                <span style="font-size: 9px; color: #aaa; background: #eee; padding: 2px 5px; border-radius: 4px;">ID: ${idDocumento.slice(-6)}</span>
+                            </div>
+                            
+                            <div style="font-size: 13px; color: #444; margin-bottom: 8px;">
+                                ${data.descricao}
+                            </div>
+                            
+                            ${fotoHtml}
+                            
+                            <div style="margin-top: 10px; padding-top: 5px; border-top: 1px solid #eee; font-size: 10px; color: #888; text-align: right;">
+                                📅 ${dataExibicao}
+                            </div>
+                        </div>
+                    `;
+
+                    m.bindPopup(popupConteudo);
                 }
             });
-            document.getElementById('count').innerText = snap.size;
+            // Atualiza o contador total na interface
+            const countElement = document.getElementById('count');
+            if(countElement) countElement.innerText = snap.size;
         });
     }
-
-    window.onload = init;
 </script>
 </body>
 </html>
