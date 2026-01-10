@@ -45,7 +45,35 @@ body {
         .btn-save { background: var(--primary); text-transform: uppercase; }
         .btn-sim { background: var(--accent); font-size: 0.7rem; width: auto; padding: 6px 12px; }
         .pulse { width: 10px; height: 10px; background: var(--primary); border-radius: 50%; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } } 
+        
+/* Estilos para os Modais */
+        .modal-overlay {
+         display: none; 
+        position: fixed; 
+         top: 0; left: 0; 
+         width: 100%; height: 100%; 
+         background: rgba(0,0,0,0.85); 
+        z-index: 3000; 
+        align-items: center; 
+        justify-content: center;
+        padding: 20px;
+}
+        .modal-content {
+        background: #1a1a1a;
+        border: 1px solid #2ecc71;
+        border-radius: 15px;
+        padding: 25px;
+        max-width: 450px;
+        width: 100%;
+        color: white;
+        font-family: sans-serif;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+    .modal-content h3 { color: #2ecc71; margin-top: 0; font-size: 1.2rem; border-bottom: 1px solid #333; padding-bottom: 10px; }
+    .modal-content p { font-size: 0.9rem; line-height: 1.5; color: #ddd; }
+    .btn-entendi { background: #e74c3c; width: 100%; margin-top: 20px; padding: 12px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+    .help-icon { display: inline-block; width: 16px; height: 16px; background: #444; color: #2ecc71; border: 1px solid #2ecc71; border-radius: 50%; text-align: center; font-size: 11px; line-height: 16px; cursor: pointer; margin-left: 5px; vertical-align: middle; }
     </style>
 </head>
 <body>
@@ -67,10 +95,32 @@ body {
 
 <div id="map"></div>
 
+<div id="modal-diagnostico" class="modal-overlay">
+    <div class="modal-content">
+        <h3>Guia de Diagnóstico Ambiental</h3>
+        <p><small>Baseado no Código Florestal (Lei 12.651/12)</small></p>
+        <p><b>1. Preservada:</b> Mata nativa (APP) em raio de 50m. Solo protegido.</p>
+        <p><b>2. Ameaçada:</b> Presença de gado, erosão, lixo, cimentação, canalização ou espécies invasoras.</p>
+        <p><b>3. Inativa/Seca:</b> Afloramento sem água por assoreamento ou degradação total.</p>
+        <button class="btn-entendi" onclick="fecharModais()">ENTENDI E VOLTAR</button>
+    </div>
+</div>
+
+<div id="modal-foto" class="modal-overlay">
+    <div class="modal-content">
+        <h3>Educação Digital: Foto Ideal</h3>
+        <p>Uma boa foto é essencial para a validação técnica do ponto:</p>
+        <p>📸 <b>Enquadramento:</b> Tente mostrar a água e a vegetação ao redor.</p>
+        <p>💡 <b>Luz:</b> Evite fotos contra o sol direto.</p>
+        <p>🚫 <b>Evite:</b> Fotos desfocadas ou de pessoas; foque no elemento ambiental.</p>
+        <button class="btn-entendi" onclick="fecharModais()">ENTENDI E VOLTAR</button>
+    </div>
+</div>
+
 <div id="action-panel">
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;" class="input-group">
         <div>
-            <label>💧 ESTADO</label>
+            <label>💧 ESTADO <span class="help-icon" onclick="abrirModal('modal-diagnostico')">?</span></label>
             <select id="status-input">
                 <option value="preservada">Preservada</option>
                 <option value="ameacada">Ameaçada</option>
@@ -78,14 +128,11 @@ body {
             </select>
         </div>
         <div>
-            <label>📷 IMAGEM</label>
+            <label>📷 IMAGEM <span class="help-icon" onclick="abrirModal('modal-foto')">?</span></label>
             <button id="photo-btn" style="background: #333; font-size: 0.7rem;" onclick="document.getElementById('photo-input').click()">ANEXAR FOTO</button>
             <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none" onchange="previewPhoto(this)">
         </div>
     </div>
-    <div class="input-group">
-        <label>📝 DESCRIÇÃO</label>
-        <textarea id="desc-input" rows="1" placeholder="Descreva o local..."></textarea>
     </div>
     <button class="btn-save" id="save-btn" onclick="salvarPonto()" disabled>CARREGANDO...</button>
 </div>
@@ -187,6 +234,14 @@ body {
             btn.innerText = "📍 REGISTRAR PONTO";
             btn.disabled = false;
         }
+        window.abrirModal = (id) => {
+    document.getElementById(id).style.display = 'flex';
+};
+
+window.fecharModais = () => {
+    document.getElementById('modal-diagnostico').style.display = 'none';
+    document.getElementById('modal-foto').style.display = 'none';
+};
     };
 
     function ouvirDados() {
