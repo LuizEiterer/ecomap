@@ -55,11 +55,16 @@
         .pulse-indicator { width: 10px; height: 10px; background: var(--primary); border-radius: 50%; animation: pulse 2s infinite; }
         .popup-img { width: 100%; border-radius: 5px; margin-top: 8px; max-height: 150px; object-fit: cover; cursor: zoom-in; }
         @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(46, 204, 113, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); } }
-    <!-- Modal de Ajuda -->
+    <!-- Modal de Ajuda Estado -->
 <div id="modal-ajuda" class="modal-overlay">
   <div class="modal-content">
     <h3>Ajuda sobre Estado</h3>
-    <p>Selecione o estado da nascente conforme sua condição atual.</p>
+    <p>Selecione o estado da nascente conforme sua condição atual:</p>
+    <ul>
+      <li><b>Preservada</b>: APP íntegra, vegetação em bom estado.</li>
+      <li><b>Ameaçada</b>: presença de ação antrópica ou degradação.</li>
+      <li><b>Seca</b>: nascente inativa, sem fluxo de água.</li>
+    </ul>
     <button class="close-modal" onclick="document.getElementById('modal-ajuda').style.display='none'">Fechar</button>
   </div>
 </div>
@@ -68,11 +73,11 @@
 <div id="modal-ajuda-foto" class="modal-overlay">
   <div class="modal-content">
     <h3>Ajuda sobre Captura de Foto</h3>
-    <p>Use a câmera para anexar uma foto da nascente.</p>
+    <p>Use a câmera do dispositivo para anexar uma foto da nascente. Isso ajuda na validação colaborativa.</p>
     <button class="close-modal" onclick="document.getElementById('modal-ajuda-foto').style.display='none'">Fechar</button>
   </div>
 </div>
-</div>
+
     </style>
 </head>
 <body>
