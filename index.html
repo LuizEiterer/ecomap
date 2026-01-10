@@ -2,19 +2,42 @@
 <html lang="pt-pt">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
     <title>EcoMap: Mapa de Nascentes</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
     <style>
-        :root { --primary: #2ecc71; --dark: #1a1a1a; --accent: #3498db; --danger: #e74c3c; }
-        html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; background: var(--dark); font-family: 'Segoe UI', sans-serif; }
-        body { display: flex; flex-direction: column; height: 100vh; }
+        :root { 
+    --primary: #2ecc71; 
+    --dark: #1a1a1a; 
+    --accent: #3498db; 
+    --danger: #e74c3c; 
+}
+       html, body { 
+    height: 100dvh; /* Usa a altura dinâmica para celular */
+    margin: 0; 
+    padding: 0; 
+    overflow: hidden; 
+    background: var(--dark); 
+    font-family: 'Segoe UI', sans-serif; 
+}
+body { 
+    display: flex; 
+    flex-direction: column; 
+    height: 100dvh; 
+}
         #header { padding: 12px; background: #222; border-bottom: 2px solid var(--primary); display: flex; justify-content: space-between; align-items: center; z-index: 1010; }
         #status-bar { font-size: 0.7rem; color: #aaa; padding: 4px; text-align: center; background: #000; z-index: 1009; }
         #map { flex: 1; width: 100%; z-index: 1; background: #111; }
-        #action-panel { padding: 15px; background: #222; border-radius: 15px 15px 0 0; box-shadow: 0 -5px 15px rgba(0,0,0,0.5); z-index: 1010; }
+        #action-panel { 
+    padding: 12px; 
+    background: #222; 
+    border-radius: 15px 15px 0 0; 
+    box-shadow: 0 -5px 15px rgba(0,0,0,0.5); 
+    z-index: 1010;
+    padding-bottom: env(safe-area-inset-bottom); /* Proteção extra para iPhones */
+}
         .input-group { margin-bottom: 8px; }
         label { display: block; font-size: 0.7rem; color: var(--primary); font-weight: bold; margin-bottom: 4px; }
         select, textarea { width: 100%; box-sizing: border-box; background: #333; border: 1px solid #444; color: white; padding: 10px; border-radius: 8px; outline: none; }
@@ -62,7 +85,7 @@
     </div>
     <div class="input-group">
         <label>📝 DESCRIÇÃO</label>
-        <textarea id="desc-input" rows="2" placeholder="Descreva o local..."></textarea>
+        <textarea id="desc-input" rows="1" placeholder="Descreva o local..."></textarea>
     </div>
     <button class="btn-save" id="save-btn" onclick="salvarPonto()" disabled>CARREGANDO...</button>
 </div>
