@@ -11,12 +11,12 @@
         :root { --primary: #2ecc71; --dark: #1a1a1a; --accent: #3498db; --danger: #e74c3c; }
         
         html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; background: var(--dark); }
-        body { display: flex; flex-direction: column; font-family: 'Segoe UI', sans-serif; color: white; }
+        body { display: flex; flex-direction: column; font-family: 'Segoe UI', sans-serif; height: 100vh; }
 
         #header { padding: 8px 15px; background: #222; border-bottom: 2px solid var(--primary); display: flex; justify-content: space-between; align-items: center; z-index: 1010; flex-shrink: 0; }
         #status-bar { font-size: 0.7rem; color: #aaa; padding: 4px; text-align: center; background: #000; border-bottom: 1px solid #333; z-index: 1009; flex-shrink: 0; }
 
-        #map { flex-grow: 1; width: 100%; z-index: 1; background: #111; }
+        #map { flex: 1 1 auto; width: 100%; z-index: 1; background: #111; min-height: 0; }
 
         #action-panel { 
             padding: 12px 15px 25px 15px; background: #222; border-radius: 15px 15px 0 0; 
@@ -55,8 +55,6 @@
         .pulse-indicator { width: 10px; height: 10px; background: var(--primary); border-radius: 50%; animation: pulse 2s infinite; }
         .popup-img { width: 100%; border-radius: 5px; margin-top: 8px; max-height: 150px; object-fit: cover; cursor: zoom-in; }
         @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(46, 204, 113, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); } }
-
-
     </style>
 </head>
 <body>
@@ -78,83 +76,81 @@
 
 <div id="map"></div>
 
-<!-- Painel de ação -->
 <div id="action-panel">
-  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;" class="input-group">
-    <div>
-      <label>
-        💧 Estado 
-        <span class="help-btn" onclick="document.getElementById('modal-ajuda').style.display='block'">?</span>
-      </label>
-      <select id="status-input">
-        <option value="preservada">Preservada (APP íntegra)</option>
-        <option value="ameacada">Ameaçada (Antrópica)</option>
-        <option value="seca">Seca (Inativa)</option>
-      </select>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;" class="input-group">
+        <div>
+            <label>💧 Estado <span class="help-btn" onclick="document.getElementById('modal-ajuda-estado').style.display='block'">?</span></label>
+            <select id="status-input">
+                <option value="preservada">Preservada (APP íntegra)</option>
+                <option value="ameacada">Ameaçada (Antrópica)</option>
+                <option value="seca">Seca (Inativa)</option>
+            </select>
+        </div>
+        <div>
+            <label>📷 Captura <span class="help-btn" onclick="document.getElementById('modal-ajuda-foto').style.display='block'">?</span></label>
+            <button id="photo-display-btn" style="background: #333; border: 1px dashed #666; width: 100%; padding: 10px; font-size: 0.7rem;" onclick="document.getElementById('photo-input').click()">FOTO: NÃO ANEXADA</button>
+            <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none" onchange="window.previewPhoto(this)">
+        </div>
     </div>
-    <div>
-      <label>
-        📷 Captura 
-        <span class="help-btn" onclick="document.getElementById('modal-ajuda-foto').style.display='block'">?</span>
-      </label>
-      <button id="photo-display-btn" style="background: #333; border: 1px dashed #666; width: 100%; padding: 10px; font-size: 0.7rem;" onclick="document.getElementById('photo-input').click()">FOTO: NÃO ANEXADA</button>
-      <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none" onchange="window.previewPhoto(this)">
-    </div>
-  </div>
-  <div class="input-group">
-    <label>📝 Descrição</label>
-    <textarea id="desc-input" rows="2" placeholder="Ex: Presença de mata ciliar..."></textarea>
-  </div>
-  <button class="btn-save" id="save-btn" onclick="window.salvarPonto()" disabled>A CARREGAR...</button>
-</div>
-
-<!-- Modal de Ajuda Estado -->
-<div id="modal-ajuda" class="modal-overlay">
-  <div class="modal-content">
-    <h3>Ajuda sobre Estado</h3>
-    <p>Selecione o estado da nascente conforme sua condição atual:</p>
-    <ul>
-      <li><b>Preservada</b>: APP íntegra, vegetação em bom estado.</li>
-      <li><b>Ameaçada</b>: presença de ação antrópica ou degradação.</li>
-      <li><b>Seca</b>: nascente inativa, sem fluxo de água.</li>
-    </ul>
-    <button class="close-modal" onclick="document.getElementById('modal-ajuda').style.display='none'">Fechar</button>
-  </div>
-</div>
-
-<!-- Modal de Ajuda Foto -->
-<div id="modal-ajuda-foto" class="modal-overlay">
-  <div class="modal-content">
-    <h3>Ajuda sobre Captura de Foto</h3>
-    <p>Use a câmera do dispositivo para anexar uma foto da nascente. Isso ajuda na validação colaborativa.</p>
-    <button class="close-modal" onclick="document.getElementById('modal-ajuda-foto').style.display='none'">Fechar</button>
-  </div>
-</div>
-
     <div class="input-group">
         <label>📝 Descrição</label>
-        <textarea id="desc-input" rows="2" placeholder="Ex: Presença de mata ciliar..."></textarea>
+        <textarea id="desc-input" rows="2" placeholder="Ex: Presença de mata ciliar, solo protegido..."></textarea>
     </div>
     <button class="btn-save" id="save-btn" onclick="window.salvarPonto()" disabled>A CARREGAR...</button>
+</div>
+
+<!-- Modal Diagnóstico Estado -->
+<div id="modal-ajuda-estado" class="modal-overlay">
+    <div class="modal-content">
+        <h3>Guia de Diagnóstico Ambiental</h3>
+        <p>Baseado no Código Florestal (Lei 12.651/12) e critérios hidrológicos.</p>
+        
+        <h4>1. Nascente Preservada</h4>
+        <p>Mata ciliar nativa em raio de 50m. Solo com serapilheira e água transparente.</p>
+
+        <h4>2. Nascente Ameaçada</h4>
+        <p>Vegetação fragmentada, presença de gado, espécies invasoras ou erosão inicial. Ambiente cimentado, impermeabilizado ou canalizado.</p>
+
+        <h4>3. Nascente Inativa/Seca</h4>
+        <p>Afloramento seco por assoreamento ou desmatamento total. Solo compactado.</p>
+
+        <button class="close-modal" onclick="document.getElementById('modal-ajuda-estado').style.display='none'">ENTENDI E VOLTAR</button>
+    </div>
+</div>
+
+<!-- Modal Ajuda Foto (Educação Digital) -->
+<div id="modal-ajuda-foto" class="modal-overlay">
+    <div class="modal-content">
+        <h3>📸 Educação Digital: Guia de Fotos</h3>
+        <p>Para um mapeamento científico e seguro, siga estas dicas:</p>
+        
+        <h4>1. Foco na Nascente</h4>
+        <p>Tente fotografar o local exato onde a água brota do solo. Evite fotos muito distantes.</p>
+
+        <h4>2. Privacidade Primeiro</h4>
+        <p><strong>Não inclua rostos de pessoas</strong>, placas de carros ou endereços visíveis. O objetivo é registrar o meio ambiente.</p>
+
+        <h4>3. Iluminação</h4>
+        <p>Fotos com luz natural são melhores. Se estiver escuro, tente focar na textura da vegetação ao redor.</p>
+
+        <h4>4. Sem Marcas Pessoais</h4>
+        <p>Evite selfies ou fotos que identifiquem propriedades privadas sem autorização.</p>
+
+        <button class="close-modal" onclick="document.getElementById('modal-ajuda-foto').style.display='none'">ENTENDI</button>
+    </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
-    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-    // ATENÇÃO: Substitua pelos seus dados do Console do Firebase
-    const firebaseConfig = {
-  apiKey: "AIzaSyAojYYMUUXITjqGofL09yTqp87L_wR9494",
-  authDomain: "ecomap---nascentes.firebaseapp.com",
-  projectId: "ecomap---nascentes",
-  storageBucket: "ecomap---nascentes.firebasestorage.app",
-  messagingSenderId: "794098061770",
-  appId: "1:794098061770:web:b990a689ad4a934dc63f33"
-};
-
+    // PROTEÇÃO: Usando a configuração injetada pelo ambiente
+    const firebaseConfig = JSON.parse(__firebase_config);
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'ecomap-v4';
+    
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
@@ -164,7 +160,102 @@
     let isSimulacao = true;
     const marcadoresNoMapa = new Map();
 
-    // Inicialização do Mapa
+    window.toggleSimulacao = () => {
+        const btn = document.getElementById('sim-btn');
+        if (!isSimulacao) {
+            if (watchId) navigator.geolocation.clearWatch(watchId);
+            isSimulacao = true;
+            btn.innerText = "Modo Real: OFF";
+            btn.style.background = "#3498db";
+            return;
+        }
+        if ("geolocation" in navigator) {
+            btn.innerText = "🛰️ BUSCANDO GPS...";
+            watchId = navigator.geolocation.watchPosition(
+                (pos) => {
+                    isSimulacao = false;
+                    btn.innerText = "Modo Real: ON";
+                    btn.style.background = "#2ecc71";
+                    currentCoords = [pos.coords.latitude, pos.coords.longitude];
+                    userMarker.setLatLng(currentCoords);
+                    map.flyTo(currentCoords, 17);
+                },
+                (err) => { 
+                    alert("Erro GPS: " + err.message); 
+                    isSimulacao = true; 
+                    btn.innerText = "Modo Real: OFF"; 
+                },
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+            );
+        }
+    };
+
+    window.salvarPonto = async () => {
+        if (!currentUser) return;
+        const desc = document.getElementById('desc-input').value;
+        const status = document.getElementById('status-input').value;
+        if (!desc.trim()) return alert("Adicione uma descrição.");
+        
+        const btn = document.getElementById('save-btn');
+        btn.disabled = true; 
+        btn.innerText = "A ENVIAR...";
+        
+        try {
+            const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'nascentes');
+            await addDoc(colRef, {
+                lat: currentCoords[0], lng: currentCoords[1],
+                status: status, descricao: desc.trim(),
+                foto: base64Image, autor: currentUser.uid,
+                data: new Date().toISOString()
+            });
+            alert("Ponto registrado com sucesso!");
+            document.getElementById('desc-input').value = "";
+            base64Image = null;
+            document.getElementById('photo-display-btn').innerText = "FOTO: NÃO ANEXADA";
+        } catch (e) { 
+            console.error(e);
+            alert("Erro ao salvar. Verifique a internet."); 
+        } 
+        finally { btn.disabled = false; btn.innerText = "📍 REGISTRAR NA NUVEM"; }
+    };
+
+    window.previewPhoto = (input) => {
+        const file = input.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const max_size = 600;
+                    let width = img.width, height = img.height;
+                    if (width > height) { if (width > max_size) { height *= max_size / width; width = max_size; } }
+                    else { if (height > max_size) { width *= max_size / height; height = max_size; } }
+                    canvas.width = width; canvas.height = height;
+                    canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                    base64Image = canvas.toDataURL('image/jpeg', 0.6);
+                    document.getElementById('photo-display-btn').innerText = "📸 FOTO PRONTA";
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    window.checkAdmin = () => {
+        clickCount++;
+        if (clickCount >= 5) {
+            const pass = prompt("Palavra-passe Admin:");
+            if (pass === "admin123") {
+                isAdmin = true;
+                document.getElementById('admin-tag').style.display = 'inline';
+                alert("Modo Admin Ativado");
+            }
+            clickCount = 0;
+        }
+        setTimeout(() => clickCount = 0, 3000);
+    };
+
     async function init() {
         map = L.map('map', { zoomControl: false, attributionControl: false }).setView(currentCoords, 15);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
@@ -180,7 +271,17 @@
             } 
         });
 
-        signInAnonymously(auth).catch(err => console.error("Erro Auth:", err));
+        // Autenticação robusta
+        try {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+                await signInAnonymously(auth);
+            }
+        } catch (err) {
+            console.error("Auth Error:", err);
+            document.getElementById('cloud-status').innerText = "Erro Auth";
+        }
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
@@ -193,42 +294,32 @@
             }
         });
 
+        // Forçar renderização do mapa
         setTimeout(() => map.invalidateSize(), 500);
+        window.addEventListener('resize', () => map.invalidateSize());
     }
 
-    // Ouvir dados do Firestore
     function ouvirDados() {
-        const colRef = collection(db, "nascentes"); // Ajuste o nome da coleção se necessário
+        if(!currentUser) return;
+        const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'nascentes');
         onSnapshot(colRef, (snap) => {
             snap.docChanges().forEach(change => {
                 const data = change.doc.data();
                 const id = change.doc.id;
-                
                 if (change.type === "added" || change.type === "modified") {
                     if (marcadoresNoMapa.has(id)) map.removeLayer(marcadoresNoMapa.get(id));
-                    
                     const cores = { preservada: '#2ecc71', ameacada: '#f1c40f', seca: '#e74c3c' };
                     const cor = cores[data.status] || '#3498db';
-
                     const m = L.circleMarker([data.lat, data.lng], { 
                         radius: 8, fillColor: cor, color: "#000", weight: 1, fillOpacity: 1 
                     }).addTo(map);
-
-                    let fotoHtml = data.foto ? `<img src="${data.foto}" class="popup-img" onclick="window.open(this.src)">` : '<div style="font-size:10px; color:#888;">Sem Foto</div>';
-                    
-                    m.bindPopup(`<b>Nascente ${data.status}</b><br>${fotoHtml}<br><small>${data.descricao}</small>`);
+                    m.bindPopup(`<b>Nascente ${data.status}</b><br>${data.descricao}`);
                     marcadoresNoMapa.set(id, m);
                 }
             });
             document.getElementById('count').innerText = snap.size;
         });
     }
-
-    // Funções de Interface
-    window.toggleSimulacao = () => { /* ... lógica do GPS enviada anteriormente ... */ };
-    window.salvarPonto = async () => { /* ... lógica de salvar enviada anteriormente ... */ };
-    window.previewPhoto = (input) => { /* ... lógica de foto enviada anteriormente ... */ };
-    window.checkAdmin = () => { /* ... lógica de admin enviada anteriormente ... */ };
 
     window.onload = init;
 </script>
