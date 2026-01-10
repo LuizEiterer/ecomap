@@ -162,6 +162,18 @@ body {
     let isSimulacao = true;
     let watchId = null;
 
+    // --- FUNÇÕES DOS MODAIS (CORRIGIDAS) ---
+    window.abrirModal = (id) => {
+        const modal = document.getElementById(id);
+        if(modal) modal.style.display = 'flex';
+    };
+
+    window.fecharModais = () => {
+        document.getElementById('modal-diagnostico').style.display = 'none';
+        document.getElementById('modal-foto').style.display = 'none';
+    };
+
+    // --- OUTRAS FUNÇÕES DO SISTEMA ---
     window.toggleSimulacao = () => {
         const btn = document.getElementById('sim-btn');
         if (!isSimulacao) {
@@ -234,14 +246,6 @@ body {
             btn.innerText = "📍 REGISTRAR PONTO";
             btn.disabled = false;
         }
-        window.abrirModal = (id) => {
-    document.getElementById(id).style.display = 'flex';
-};
-
-window.fecharModais = () => {
-    document.getElementById('modal-diagnostico').style.display = 'none';
-    document.getElementById('modal-foto').style.display = 'none';
-};
     };
 
     function ouvirDados() {
@@ -317,7 +321,6 @@ window.fecharModais = () => {
         setTimeout(() => map.invalidateSize(), 500);
     }
 
-    // Inicia tudo ao carregar a página
     window.onload = init;
 </script>
 </body>
