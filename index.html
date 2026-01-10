@@ -55,28 +55,7 @@
         .pulse-indicator { width: 10px; height: 10px; background: var(--primary); border-radius: 50%; animation: pulse 2s infinite; }
         .popup-img { width: 100%; border-radius: 5px; margin-top: 8px; max-height: 150px; object-fit: cover; cursor: zoom-in; }
         @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(46, 204, 113, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); } }
-    <!-- Modal de Ajuda Estado -->
-<div id="modal-ajuda" class="modal-overlay">
-  <div class="modal-content">
-    <h3>Ajuda sobre Estado</h3>
-    <p>Selecione o estado da nascente conforme sua condição atual:</p>
-    <ul>
-      <li><b>Preservada</b>: APP íntegra, vegetação em bom estado.</li>
-      <li><b>Ameaçada</b>: presença de ação antrópica ou degradação.</li>
-      <li><b>Seca</b>: nascente inativa, sem fluxo de água.</li>
-    </ul>
-    <button class="close-modal" onclick="document.getElementById('modal-ajuda').style.display='none'">Fechar</button>
-  </div>
-</div>
 
-<!-- Modal de Ajuda Foto -->
-<div id="modal-ajuda-foto" class="modal-overlay">
-  <div class="modal-content">
-    <h3>Ajuda sobre Captura de Foto</h3>
-    <p>Use a câmera do dispositivo para anexar uma foto da nascente. Isso ajuda na validação colaborativa.</p>
-    <button class="close-modal" onclick="document.getElementById('modal-ajuda-foto').style.display='none'">Fechar</button>
-  </div>
-</div>
 
     </style>
 </head>
@@ -99,22 +78,59 @@
 
 <div id="map"></div>
 
+<!-- Painel de ação -->
 <div id="action-panel">
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;" class="input-group">
-        <div>
-            <label>💧 Estado <span class="help-btn" onclick="document.getElementById('modal-ajuda').style.display='block'">?</span></label>
-            <select id="status-input">
-                <option value="preservada">Preservada (APP íntegra)</option>
-                <option value="ameacada">Ameaçada (Antrópica)</option>
-                <option value="seca">Seca (Inativa)</option>
-            </select>
-        </div>
-        <div>
-            <label>📷 Captura <span class="help-btn" onclick="document.getElementById('modal-ajuda-foto').style.display='block'">?</span></label>
-            <button id="photo-display-btn" style="background: #333; border: 1px dashed #666; width: 100%; padding: 10px; font-size: 0.7rem;" onclick="document.getElementById('photo-input').click()">FOTO: NÃO ANEXADA</button>
-            <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none" onchange="window.previewPhoto(this)">
-        </div>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;" class="input-group">
+    <div>
+      <label>
+        💧 Estado 
+        <span class="help-btn" onclick="document.getElementById('modal-ajuda').style.display='block'">?</span>
+      </label>
+      <select id="status-input">
+        <option value="preservada">Preservada (APP íntegra)</option>
+        <option value="ameacada">Ameaçada (Antrópica)</option>
+        <option value="seca">Seca (Inativa)</option>
+      </select>
     </div>
+    <div>
+      <label>
+        📷 Captura 
+        <span class="help-btn" onclick="document.getElementById('modal-ajuda-foto').style.display='block'">?</span>
+      </label>
+      <button id="photo-display-btn" style="background: #333; border: 1px dashed #666; width: 100%; padding: 10px; font-size: 0.7rem;" onclick="document.getElementById('photo-input').click()">FOTO: NÃO ANEXADA</button>
+      <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none" onchange="window.previewPhoto(this)">
+    </div>
+  </div>
+  <div class="input-group">
+    <label>📝 Descrição</label>
+    <textarea id="desc-input" rows="2" placeholder="Ex: Presença de mata ciliar..."></textarea>
+  </div>
+  <button class="btn-save" id="save-btn" onclick="window.salvarPonto()" disabled>A CARREGAR...</button>
+</div>
+
+<!-- Modal de Ajuda Estado -->
+<div id="modal-ajuda" class="modal-overlay">
+  <div class="modal-content">
+    <h3>Ajuda sobre Estado</h3>
+    <p>Selecione o estado da nascente conforme sua condição atual:</p>
+    <ul>
+      <li><b>Preservada</b>: APP íntegra, vegetação em bom estado.</li>
+      <li><b>Ameaçada</b>: presença de ação antrópica ou degradação.</li>
+      <li><b>Seca</b>: nascente inativa, sem fluxo de água.</li>
+    </ul>
+    <button class="close-modal" onclick="document.getElementById('modal-ajuda').style.display='none'">Fechar</button>
+  </div>
+</div>
+
+<!-- Modal de Ajuda Foto -->
+<div id="modal-ajuda-foto" class="modal-overlay">
+  <div class="modal-content">
+    <h3>Ajuda sobre Captura de Foto</h3>
+    <p>Use a câmera do dispositivo para anexar uma foto da nascente. Isso ajuda na validação colaborativa.</p>
+    <button class="close-modal" onclick="document.getElementById('modal-ajuda-foto').style.display='none'">Fechar</button>
+  </div>
+</div>
+
     <div class="input-group">
         <label>📝 Descrição</label>
         <textarea id="desc-input" rows="2" placeholder="Ex: Presença de mata ciliar..."></textarea>
